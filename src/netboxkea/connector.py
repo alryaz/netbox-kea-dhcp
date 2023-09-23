@@ -1,32 +1,41 @@
 import logging
-
+from typing import Any
 from ipaddress import ip_interface
 
 from .kea.exceptions import (KeaError, KeaClientError, SubnetNotEqual,
                              SubnetNotFound)
 
 
-def _get_nested(obj, attrs, sep='.'):
+def _get_nested(obj, attrs: str, sep='.') -> Any:
     """ Get value from a nested list of attributes or keys separated by sep """
+  
+    current_key, _, attrs = attrs.partition(sep)
 
-    value = obj
-    for a in attrs.split(sep):
-        # getattr must be tried before dict.get because it is able to trigger
-        # additionnal queries to netbox API.
-        try:
-            value = getattr(value, a)
-        except AttributeError:
-            value = value[a]
+    if current_key == '*':
+        # iterate over lists if an asterisk is presented
+        return [
+            *_get_nested(value, attrs, sep)
+            for value in obj
+        ]
 
-    return value
+    try:
+        value = getattr(value, a)
+    except AttributeError:
+        value = value[a]
+
+    return _get_nested(value, attrs, sep) if attrs else value
 
 
-def _set_dhcp_attr(dhcp_item, key, value):
+def _set_dhcp_attr(dhcp_item: dict, key: str, value: Any) -> None:
     """
     Set value to DHCP item dictionary. Key may be nested keys separated
     by dots, in which case each key represents a nested dictionary (or list, if
-    the parent attribut is known to use a list).
+    the parent attribute is known to use a list).
     """
+
+    # convert list values into a concatenated string sequence
+    if isinstance(value, list):
+        value = ', '.join(map(str, value))
 
     k1, _, k2 = key.partition('.')
     if not k2:
@@ -52,7 +61,7 @@ def _mk_dhcp_item(nb_obj, mapping):
         for a in attrs:
             try:
                 value = _get_nested(nb_obj, a)
-            except (TypeError, KeyError):
+            except (TypeError, KeyError, AttributeError, ValueError):
                 continue
             if value:
                 break
