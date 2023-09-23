@@ -173,6 +173,7 @@ class DHCP4App:
             subnet_item.setdefault(POOLS, [])
             logging.info(f'subnets: add {subnet}, ID {prefix_id}')
             self.conf[SUBNETS].append(subnet_item)
+        logging.debug(f'subnets: subnet ID {prefix_id} config: {subnet_item}')
 
     @_autocommit
     def del_subnet(self, prefix_id, commit=None):
