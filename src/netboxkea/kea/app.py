@@ -82,6 +82,7 @@ class DHCP4App:
         except KeaCmdError:
             # Drop current working config
             logging.error('config check failed, drop uncommited changes')
+            logging.debug(f'erroneous config: {self.conf}')
             self.conf = deepcopy(self.commit_conf)
             raise
         else:
