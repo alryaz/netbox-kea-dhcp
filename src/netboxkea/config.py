@@ -31,7 +31,7 @@ class Config:
     ipaddress_filter: dict = field(default_factory=lambda: {'status': 'dhcp'})
     iprange_filter: dict = field(default_factory=lambda: {})
     subnet_prefix_map: dict = field(default_factory=lambda: {
-        'option-data.routers': 'custom_fields.dhcp_option_data_routers',
+        'option-data.routers': 'custom_fields.dhcp_option_data_routers.*.address',
         'option-data.domain-search':
             'custom_fields.dhcp_option_data_domain_search',
         'option-data.domain-name-servers':
